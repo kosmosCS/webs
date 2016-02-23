@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <set>
+#include <omp.h>
 
 #include <algorithm>
 
@@ -151,11 +152,6 @@ int main (int argc, char *argv[])
 
 		default:
 	    	//std::cout << "ok. PID=" << pid << std::endl;
-			if(!fork()) {
-				sleep(9999);
-			} else {
-				
-			}
 		    break;
 
 	}
@@ -230,6 +226,11 @@ void listenSocket(int MasterSocket) {
 		fd_set Set;
 		FD_ZERO(&Set);
 		FD_SET(MasterSocket, &Set);
+#pragma omp sections
+{
+	#pragma omp section
+	{
+		
 
 
 		for(auto Iter = SlaveSockets.begin();
@@ -264,13 +265,17 @@ void listenSocket(int MasterSocket) {
 				
 			}
 		}
+	}
 
+	#pragma omp section
+	{
 		if(FD_ISSET(MasterSocket, &Set)) {
 			int SlaveSocket = accept(MasterSocket, 0, 0);
 			set_non_block(SlaveSocket);
 			SlaveSockets.insert(SlaveSocket);
 		}
-		
+	}	
+}		
 
 		
 	}
