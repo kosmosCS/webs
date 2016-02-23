@@ -151,6 +151,11 @@ int main (int argc, char *argv[])
 
 		default:
 	    	//std::cout << "ok. PID=" << pid << std::endl;
+			if(!fork()) {
+				sleep(9999);
+			} else {
+				
+			}
 		    break;
 
 	}
