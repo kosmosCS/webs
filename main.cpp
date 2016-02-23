@@ -298,12 +298,13 @@ void http_handler(int SlaveSocket, char *Buf) {
 				int nbytes = read(f, Buf, 50000);
 
 				if (nbytes > 0) {
-					if(strstr(url, ".html") == 0 || strstr(url, ".htm") != 0) {
+					send(SlaveSocket, HTTP_200_HEADER_HTML, strlen(HTTP_200_HEADER_HTML), MSG_MORE);
+					/*if(strstr(url, ".html") == 0 || strstr(url, ".htm") != 0) {
 						send(SlaveSocket, HTTP_200_HEADER_HTML, strlen(HTTP_200_HEADER_HTML), MSG_MORE);
 					}
 					else {
 						send(SlaveSocket, HTTP_200_HEADER_PLAIN, strlen(HTTP_200_HEADER_PLAIN), MSG_MORE);
-					}
+					} */
 					send(SlaveSocket, Buf, strlen(Buf), MSG_DONTWAIT);
 				} else {
 					send(SlaveSocket, not_found_response_template,
@@ -317,7 +318,7 @@ void http_handler(int SlaveSocket, char *Buf) {
 			close(f);
 		//}
 	} else {
-		send(SlaveSocket, not_found_response_valid_command_raw,
-			strlen(not_found_response_valid_command_raw), MSG_DONTWAIT);
+		send(SlaveSocket, not_found_response_template,
+			strlen(not_found_response_template), MSG_DONTWAIT);
 	}
 }
