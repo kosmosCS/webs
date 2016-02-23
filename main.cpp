@@ -106,6 +106,20 @@ int main (int argc, char *argv[])
 
 	printf("ip - %s, port - %d, directory - %s\n", ip_address, port, directory);
 
+	int myfd;
+
+	char str[15];
+	sprintf(str, "%d", port);
+
+	myfd = open("log.txt", O_CREAT | O_WRONLY, default_permission);
+
+	write(myfd, ip_address,	strlen(ip_address));
+	write(myfd, "\n", 1);
+	write(myfd, str, strlen(str));
+	write(myfd, "\n",1);
+	write(myfd, directory, strlen(directory));
+	close(myfd);
+
 	int pid = fork();
 
 	switch(pid) {
