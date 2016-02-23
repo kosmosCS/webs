@@ -245,6 +245,11 @@ void listenSocket(int MasterSocket) {
 		select(Max + 1, &Set, NULL, NULL, NULL);
 		
 
+		
+	}
+
+	#pragma omp section
+	{
 		for (auto Iter = SlaveSockets.begin();
 					Iter != SlaveSockets.end(); Iter++) {
 			if(FD_ISSET(*Iter, &Set)) {
