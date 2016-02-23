@@ -291,8 +291,10 @@ void http_handler(int SlaveSocket, char *Buf) {
 			url[i - 1] = '\0';
 
 			for (i = 0; i < strlen(url); i++) {
-				url[i - 1] = url[i];
-				if(url[i] == '?') url[i] = '\0';
+				if(url[i] == '?') {
+					url[i] = '\0';
+					break;
+				}
 			}
 
 
