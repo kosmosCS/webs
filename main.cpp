@@ -104,7 +104,7 @@ int main (int argc, char *argv[])
 
 	strcpy(PATH, directory);
 
-	printf("ip - %s, port - %d, directory - %s\n", ip_address, port, directory);
+	//printf("ip - %s, port - %d, directory - %s\n", ip_address, port, directory);
 
 	int myfd;
 
@@ -146,11 +146,11 @@ int main (int argc, char *argv[])
 			exit(1);
 		    exit(0);
 		case -1:
-	    	std::cout << "fork() error" << std::endl;
+	    //	std::cout << "fork() error" << std::endl;
 	    break;
 
 		default:
-	    	std::cout << "ok. PID=" << pid << std::endl;
+	    	//std::cout << "ok. PID=" << pid << std::endl;
 		    break;
 
 	}
