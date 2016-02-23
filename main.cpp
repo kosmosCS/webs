@@ -265,10 +265,10 @@ void http_handler(int SlaveSocket, char *Buf) {
 	sscanf (Buf, "%s %s %s", method, url, protocol);
 
 	if(!(strcmp(method, "GET"))) {
-		if(!strcmp(url,"/")) {
+		//if(!strcmp(url,"/")) {
 			
 			
-		} else {
+		//} else {
 			int f, i;
 
 			for (i = 1; i < strlen(url); i++) {
@@ -301,7 +301,7 @@ void http_handler(int SlaveSocket, char *Buf) {
 					strlen(not_found_response_template), MSG_DONTWAIT);
 			}
 			close(f);
-		}
+		//}
 	} else {
 		send(SlaveSocket, not_found_response_valid_command_raw,
 			strlen(not_found_response_valid_command_raw), MSG_DONTWAIT);
