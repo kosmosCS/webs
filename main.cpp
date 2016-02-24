@@ -268,7 +268,6 @@ void listenSocket(int MasterSocket) {
 					int SlaveSocket = accept(MasterSocket, 0, 0);
 					set_non_block(SlaveSocket);
 						SlaveSockets.insert(SlaveSocket);
-						printf("accept %d\n", SlaveSocket);
 				}
 			}
 				
