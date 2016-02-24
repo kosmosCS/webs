@@ -168,7 +168,7 @@ int main (int argc, char *argv[])
 	    break;
 
 		default:
-	    	//std::cout << "ok. PID=" << pid << std::endl;
+	    	std::cout << "ok. PID=" << pid << std::endl;
 		    break;
 
 	}
@@ -243,11 +243,17 @@ void listenSocket(int MasterSocket) {
 	listen(MasterSocket, SOMAXCONN);
 	
 		
-fd_set Set;
+	fd_set Set;
+	#pragma omp parallel sections shared(SlaveSockets)
+	{
+		#pragma omp section
+		{
 		while(1) {
 			
-			FD_ZERO(&Set);
-			FD_SET(MasterSocket, &Set);
+			#pragma omp critical
+			{
+				FD_ZERO(&Set);
+				FD_SET(MasterSocket, &Set);
 				for(auto Iter = SlaveSockets.begin();
 							Iter != SlaveSockets.end(); Iter++) {
 						FD_SET(*Iter, &Set);
@@ -256,11 +262,24 @@ fd_set Set;
 				int Max = std::max(MasterSocket,
 						*std::max_element(SlaveSockets.begin(),
 							SlaveSockets.end()));
-
 				select(Max + 1, &Set, NULL, NULL, NULL);
-			
 
-				for (auto Iter = SlaveSockets.begin();
+				if(FD_ISSET(MasterSocket, &Set)) {
+					int SlaveSocket = accept(MasterSocket, 0, 0);
+					set_non_block(SlaveSocket);
+						SlaveSockets.insert(SlaveSocket);
+						printf("accept %d\n", SlaveSocket);
+				}
+			}
+				
+		}
+		}
+		#pragma omp section
+		{
+		while(1) {
+			#pragma omp critical
+			{
+			for (auto Iter = SlaveSockets.begin();
 							Iter != SlaveSockets.end(); Iter++) {
 					if(FD_ISSET(*Iter, &Set)) {
 						//code handler to receive and send
@@ -280,14 +299,10 @@ fd_set Set;
 						
 					}
 				}
-				
-				if(FD_ISSET(MasterSocket, &Set)) {
-					int SlaveSocket = accept(MasterSocket, 0, 0);
-					set_non_block(SlaveSocket);
-						SlaveSockets.insert(SlaveSocket);
-				}
-
+			}
 		}
+		}
+	}
 }
 		
 
