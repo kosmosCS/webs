@@ -16,8 +16,8 @@
 #include <signal.h>
 #include <set>
 #include <omp.h>
-
 #include <algorithm>
+#include <thread>
 
 
 
@@ -65,6 +65,23 @@ const int default_permission = S_IRUSR | S_IWUSR |
                          S_IROTH | S_IWOTH;
 
 static char PATH[200];
+
+// class Container {
+// 	std::mutex m;
+// 	std::set<int> CLIENTS;
+
+// 	void add(int el) {
+// 		m.lock();
+// 		SlaveSockets.insert(el);
+// 		m.unlock();
+// 	}
+
+// 	void remove(int el) {
+// 		m.lock();
+// 		SlaveSockets.erase(el);
+// 		m.unlock();
+// 	}
+// };
 
 
 int set_non_block(int fd) {
@@ -221,70 +238,60 @@ int getInputs(int argc, char *argv[], char *ip, int *port, char *dir) {
 void listenSocket(int MasterSocket) {
 	std::set<int> SlaveSockets;
 
+	std::thread t();
+
 	listen(MasterSocket, SOMAXCONN);
-	while(1) {
-		fd_set Set;
-		FD_ZERO(&Set);
-		FD_SET(MasterSocket, &Set);
-#pragma omp sections
-{
-	#pragma omp section
-	{
+	
 		
+fd_set Set;
+		while(1) {
+			
+			FD_ZERO(&Set);
+			FD_SET(MasterSocket, &Set);
+				for(auto Iter = SlaveSockets.begin();
+							Iter != SlaveSockets.end(); Iter++) {
+						FD_SET(*Iter, &Set);
+				}
 
+				int Max = std::max(MasterSocket,
+						*std::max_element(SlaveSockets.begin(),
+							SlaveSockets.end()));
 
-		for(auto Iter = SlaveSockets.begin();
-					Iter != SlaveSockets.end(); Iter++) {
-				FD_SET(*Iter, &Set);
-		}
+				select(Max + 1, &Set, NULL, NULL, NULL);
+			
 
-		int Max = std::max(MasterSocket,
-				*std::max_element(SlaveSockets.begin(),
-					SlaveSockets.end()));
-
-		select(Max + 1, &Set, NULL, NULL, NULL);
-		
-
-		
-	}
-
-	#pragma omp section
-	{
-		for (auto Iter = SlaveSockets.begin();
-					Iter != SlaveSockets.end(); Iter++) {
-			if(FD_ISSET(*Iter, &Set)) {
-				//code handler to receive and send
-				static char Buffer[1024];
-				int RecvSize = recv(*Iter, Buffer, 1024, MSG_NOSIGNAL);
-				if((RecvSize == 0) && (errno != EAGAIN)) {
-					shutdown(*Iter, SHUT_RDWR);
-					close(*Iter);
-					SlaveSockets.erase(Iter);
-				} else if (RecvSize != 0){
-					http_handler(*Iter, Buffer);
-				//	printf("user disconnected - %d\n",*Iter);
-					shutdown(*Iter, SHUT_RDWR);
-					close(*Iter);
-					SlaveSockets.erase(Iter);
+				for (auto Iter = SlaveSockets.begin();
+							Iter != SlaveSockets.end(); Iter++) {
+					if(FD_ISSET(*Iter, &Set)) {
+						//code handler to receive and send
+						static char Buffer[1024];
+						int RecvSize = recv(*Iter, Buffer, 1024, MSG_NOSIGNAL);
+						if((RecvSize == 0) && (errno != EAGAIN)) {
+							shutdown(*Iter, SHUT_RDWR);
+							close(*Iter);
+							SlaveSockets.erase(Iter);
+						} else if (RecvSize != 0){
+							http_handler(*Iter, Buffer);
+						//	printf("user disconnected - %d\n",*Iter);
+							shutdown(*Iter, SHUT_RDWR);
+							close(*Iter);
+							SlaveSockets.erase(Iter);
+						}
+						
+					}
 				}
 				
-			}
-		}
-	}
+				if(FD_ISSET(MasterSocket, &Set)) {
+					int SlaveSocket = accept(MasterSocket, 0, 0);
+					set_non_block(SlaveSocket);
+						SlaveSockets.insert(SlaveSocket);
+				}
 
-	#pragma omp section
-	{
-		if(FD_ISSET(MasterSocket, &Set)) {
-			int SlaveSocket = accept(MasterSocket, 0, 0);
-			set_non_block(SlaveSocket);
-			SlaveSockets.insert(SlaveSocket);
 		}
-	}	
-}		
+}
+		
 
 		
-	}
-}
 
 void http_handler(int SlaveSocket, char *Buf) {
 	char method[10];
