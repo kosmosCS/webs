@@ -168,7 +168,7 @@ int main (int argc, char *argv[])
 	    break;
 
 		default:
-	    	std::cout << "ok. PID=" << pid << std::endl;
+	    //	std::cout << "ok. PID=" << pid << std::endl;
 		    break;
 
 	}
